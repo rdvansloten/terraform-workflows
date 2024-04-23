@@ -1,0 +1,39 @@
+name: Terraform Test
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.17
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.4.7
+
+      - name: Run Terratest
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          go test -v -timeout 60m
